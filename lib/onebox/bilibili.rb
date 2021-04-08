@@ -9,7 +9,9 @@ module Onebox
       # Try to get the video ID. Works for URLs of the form:
       # * http://www.bilibili.com/video/av4235068/
       def video_id
-        match = uri.path.match(/video\/(.*)\/)
+        
+        match = uri.path.match(/\/video\/(.*)\//)
+
         return match[1] if match && match[1]
 
         nil
