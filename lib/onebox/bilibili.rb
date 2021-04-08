@@ -10,7 +10,7 @@ module Onebox
       # * http://www.bilibili.com/video/av4235068/
       def video_id
         
-        match = uri.path.match(/\/video\/([A-z0-9]+)(\.html)?.*/)
+        match = uri.path.match(/\/video\/BV(\d+)(\.html)?.*/)
 
         return match[1] if match && match[1]
 
