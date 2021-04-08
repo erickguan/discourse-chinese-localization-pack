@@ -4,7 +4,7 @@ module Onebox
       include Engine
       include HTML
 
-      matches_regexp(/^https?:\/\/(?:www\.)?bilibili\.com\/video\/([a-z0-9]+)\/?$/)
+      matches_regexp(/^https?:\/\/(?:www\.)?bilibili\.com\/video\/([A-z0-9]+)\/?$/)
 
       # Try to get the video ID. Works for URLs of the form:
       # * http://www.bilibili.com/video/av4235068/
