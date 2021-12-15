@@ -62,7 +62,7 @@ after_initialize do
     AdminDashboardData.add_problem_check check
   end
 
-  DiscourseEvent.on(:site_setting_saved) do |site_setting|
+  DiscourseEvent.on(:site_setting_changed) do |site_setting|
     if site_setting.name == SITE_SETTING_NAME && site_setting.value_changed? && site_setting.value == "f" # false
       PROVIDERS.each { |provider| SiteSetting.public_send("#{PLUGIN_PREFIX}enable_#{provider[0].downcase}_logins=", false) }
     end
