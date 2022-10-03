@@ -2,7 +2,7 @@ zh_CN:
   js:
     login:
       weibo:
-        title: "使用微博帐号登录"
+        name: "使用微博帐号登录"
         message: "使用微博帐号验证登录（请确保没有禁止浏览器弹出对话框）"
       renren:
         title: "使用人人帐号登录"
