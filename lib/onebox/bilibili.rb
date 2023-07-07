@@ -21,7 +21,7 @@ module Onebox
 
 
       def to_html
-        "<iframe src='https://player.bilibili.com/player.html?#{video_id}&high_quality=1' frameborder='no' width='100%' height='430' allowfullscreen='true'></iframe>"
+        "<iframe src='https://player.bilibili.com/player.html?#{video_id}&high_quality=1&autoplay=0' frameborder='no' width='100%' height='430' allowfullscreen='true'></iframe>"
       end
 
       def placeholder_html
