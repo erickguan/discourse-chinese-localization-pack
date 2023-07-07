@@ -19,8 +19,8 @@ module HTMLSpecHelper
 
   def response(file)
     file = File.join("spec", "fixtures", "#{file}.response")
-    p file, File.exists?(file)
-    File.exists?(file) ? File.read(file) : ""
+    p file, File.exist?(file)
+    File.exist?(file) ? File.read(file) : ""
   end
 end
 
