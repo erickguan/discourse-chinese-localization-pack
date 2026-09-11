@@ -4,6 +4,7 @@ plugins:
     client: true
   zh_l10n_enable_weibo_logins:
     default: false
+    validator: AuthProviderCredentialsValidator
     client: true
   zh_l10n_weibo_client_id:
     default: ''

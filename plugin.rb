@@ -6,58 +6,57 @@
 
 enabled_site_setting :zh_l10n_enabled
 
-gem('omniauth-weibo-oauth2', '0.5.2') # https://github.com/beenhero/omniauth-weibo-oauth2
+gem("omniauth-weibo-oauth2", "0.5.3")
 
-register_svg_icon 'fab-weibo'
-register_svg_icon 'fab-qq'
+register_svg_icon "fab-weibo"
+register_svg_icon "fab-qq"
 
 # load oauth providers
-Dir[File.expand_path('../lib/auth/*.rb', __FILE__)].each { |f| require f }
-require 'active_support/inflector'
+Dir[File.expand_path("../lib/auth/*.rb", __FILE__)].each { |f| require f }
+require "active_support/inflector"
 require "ostruct"
 
-PROVIDERS = ['Weibo']
+PROVIDERS = ["Weibo"]
 
-PLUGIN_PREFIX = 'zh_l10n_'.freeze
-SITE_SETTING_NAME = 'zh_l10n_enabled'.freeze
-ONEBOX_SETTING_NAME = 'zh_l10n_http_onebox_override'.freeze
+PLUGIN_PREFIX = "zh_l10n_".freeze
+SITE_SETTING_NAME = "zh_l10n_enabled".freeze
+ONEBOX_SETTING_NAME = "zh_l10n_http_onebox_override".freeze
 
 def provider_icon(provider_name)
   provider_name = provider_name.downcase
   "fab-#{provider_name}"
 end
 
-PROVIDERS.each { |name| auth_provider(authenticator: "#{name}Authenticator".constantize.new, icon: provider_icon(name)) }
+PROVIDERS.each do |name|
+  auth_provider(
+    authenticator: "#{name}Authenticator".constantize.new,
+    icon: provider_icon(name)
+  )
+end
 
-Dir[File.expand_path('../lib/onebox_override/*.rb', __FILE__)].each { |f| require f }
+Dir[File.expand_path("../lib/onebox_override/*.rb", __FILE__)].each do |f|
+  require f
+end
 
 register_asset "stylesheets/buttons.scss"
 
 after_initialize do
   next unless SiteSetting.zh_l10n_enabled
 
-  Dir[File.expand_path('../lib/onebox/*.rb', __FILE__)].each { |f| require f }
+  Dir[File.expand_path("../lib/onebox/*.rb", __FILE__)].each { |f| require f }
 
-  PROVIDERS.each do |name|
-    provider_name = name.downcase
-    enable_setting = "#{PLUGIN_PREFIX}enable_#{provider_name}_logins"
-    check = "#{provider_name}_config_check".to_sym
-
-    AdminDashboardData.class_eval do
-      define_method(check) do
-        if SiteSetting.public_send(enable_setting) && (
-            SiteSetting.public_send("#{PLUGIN_PREFIX}#{provider_name}_client_id").blank? ||
-            SiteSetting.public_send("#{PLUGIN_PREFIX}#{provider_name}_client_secret").blank?)
-          I18n.t("dashboard.#{PLUGIN_PREFIX}#{provider_name}_config_warning")
-        end
-      end
-    end
-    AdminDashboardData.add_problem_check check
-  end
+  require_relative "app/services/problem_check/weibo_config"
+  register_problem_check ProblemCheck::WeiboConfig
 
   DiscourseEvent.on(:site_setting_changed) do |site_setting|
-    if site_setting.name == SITE_SETTING_NAME && site_setting.value_changed? && site_setting.value == "f" # false
-      PROVIDERS.each { |provider| SiteSetting.public_send("#{PLUGIN_PREFIX}enable_#{provider[0].downcase}_logins=", false) }
+    if site_setting.name == SITE_SETTING_NAME && site_setting.value_changed? &&
+         site_setting.value == "f" # false
+      PROVIDERS.each do |provider|
+        SiteSetting.public_send(
+          "#{PLUGIN_PREFIX}enable_#{provider[0].downcase}_logins=",
+          false
+        )
+      end
     end
   end
 
@@ -68,12 +67,13 @@ after_initialize do
 
       # only catch when a oauth login and a username is random
       if hash[:auth_provider]
-        match = (hash[:username] || '').match(/^\d+$/i)
+        match = (hash[:username] || "").match(/^\d+$/i)
 
         if SiteSetting.zh_l10n_disable_random_username_sugeestion && match
           hash[:username] = nil
 
-          if SiteSetting.enable_names? && SiteSetting.zh_l10n_disable_random_username_sugeestion && match
+          if SiteSetting.enable_names? &&
+               SiteSetting.zh_l10n_disable_random_username_sugeestion && match
             hash[:name] = nil
           end
         end
@@ -83,7 +83,5 @@ after_initialize do
     end
   end
 
-  Auth::Result.class_eval do
-    prepend ::DisableUsernameSuggester
-  end
+  Auth::Result.class_eval { prepend ::DisableUsernameSuggester }
 end

@@ -1,6 +1,9 @@
 # encoding: utf-8
 
 en:
+  dashboard:
+    problem:
+      weibo_config: "{{setting:zh_l10n_enable_weibo_logins}} is on, but %{missing_settings} must still be set."
   site_settings:
     zh_l10n_enabled: "Enable Chinese localization pack."
     zh_l10n_weibo_client_id: "Client id for Weibo authentication, registered at http://open.weibo.com/"

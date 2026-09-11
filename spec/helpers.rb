@@ -1,12 +1,11 @@
 require "rspec"
 require "pry"
-require "fakeweb"
 require "onebox"
-require 'mocha/api'
+require "mocha/api"
 
 module HTMLSpecHelper
   def fake(uri, response, verb = :get)
-    FakeWeb.register_uri(verb, uri, response: header(response))
+    stub_request(verb, uri).to_return(body: response)
   end
 
   def header(html)
@@ -18,14 +17,18 @@ module HTMLSpecHelper
   end
 
   def response(file)
-    file = File.join("spec", "fixtures", "#{file}.response")
+    file = File.expand_path("fixtures/#{file}.response", __dir__)
     File.exist?(file) ? File.read(file) : ""
   end
 end
 
-
 module PluginSpecHelpers
   def load_auth_hash(name)
-    YAML.load_file(File.expand_path('../fixtures/oauth_tokens.yml', __FILE__))[name]
+    YAML.load_file(
+      File.expand_path("../fixtures/oauth_tokens.yml", __FILE__),
+      permitted_classes: [Symbol, Date]
+    )[
+      name
+    ]
   end
 end
