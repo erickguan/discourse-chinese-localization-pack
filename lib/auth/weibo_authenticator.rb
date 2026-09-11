@@ -3,8 +3,12 @@ class WeiboAuthenticator < ::Auth::ManagedAuthenticator
     'weibo'
   end
 
-  def enabled?
-    SiteSetting.zh_l10n_enable_weibo_logins
+  def enable_setting
+    :zh_l10n_enable_weibo_logins
+  end
+
+  def required_settings
+    %i[zh_l10n_weibo_client_id zh_l10n_weibo_client_secret]
   end
 
   def match_by_email
