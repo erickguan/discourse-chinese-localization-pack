@@ -1,73 +1,66 @@
-require 'rails_helper'
-load File.expand_path('../../../helpers.rb', __FILE__)
+require_relative "../../helpers"
 
-RSpec.configure do |c|
-  c.include PluginSpecHelpers
-end
+RSpec.describe WeiboAuthenticator do
+  include PluginSpecHelpers
 
-describe WeiboAuthenticator do
-  let(:hash) { load_auth_hash('weibo') }
-  let(:key) { "weibo_uid_#{hash[:uid]}" }
+  subject(:authenticator) { described_class.new }
 
-  context '.after_authenticate' do
-    context 'with existing weibo login record' do
-      before { PluginStore.set('weibo', key, {user_id: user.id}) }
-      after { PluginStore.remove('weibo', key) }
-      let(:user) { Fabricate(:user) }
+  fab!(:user)
+  let(:auth_hash) { load_auth_hash("weibo") }
+  let(:association) do
+    UserAssociatedAccount.find_by!(
+      provider_name: "weibo",
+      provider_uid: auth_hash[:uid]
+    )
+  end
 
-      it 'can authenticate existing user given weibo uid' do
-        authenticator = described_class.new
+  describe "#after_authenticate" do
+    it "authenticates an existing associated user" do
+      Fabricate(
+        :user_associated_account,
+        provider_name: "weibo",
+        provider_uid: auth_hash[:uid],
+        user: user
+      )
 
-        result = authenticator.after_authenticate(hash)
-
-        expect(result.user.id).to eq(user.id)
-      end
-
-      it 'can store additional information' do
-        authenticator = described_class.new
-
-        authenticator.after_authenticate(hash)
-
-        expect(PluginStore.get('weibo', key)[:raw_info]).to be_a(Hash)
-        expect(PluginStore.get('weibo', key)[:raw_info][:city]).to eq('广州')
-      end
+      expect(authenticator.after_authenticate(auth_hash).user).to eq(user)
     end
 
-    it 'can create a proper result for non existing users' do
-      authenticator = described_class.new
-      result = authenticator.after_authenticate(hash)
+    it "stores provider information" do
+      authenticator.after_authenticate(auth_hash)
 
-      expect(result.user).to eq(nil)
-      expect(result.extra_data[:weibo_uid]).to eq('1234567890')
+      expect(association.extra["raw_info"]).to eq(
+        auth_hash[:extra][:raw_info].stringify_keys
+      )
+    end
+
+    it "returns a result for an unassociated account" do
+      result = authenticator.after_authenticate(auth_hash)
+
+      expect(result.user).to be_nil
+      expect(result.extra_data).to eq(provider: "weibo", uid: auth_hash[:uid])
     end
   end
 
-  context '.after_create_account' do
-    let(:user) { Fabricate(:user) }
-    context 'with existing plugin record' do
-      before { PluginStore.set('weibo', key, {user_id: user.id, raw_info: 1}) }
-      after { PluginStore.remove('weibo', key) }
+  describe "#after_create_account" do
+    it "links an existing association without losing provider information" do
+      result = authenticator.after_authenticate(auth_hash)
 
-      it 'merge weibo uid in plugin store' do
-        authenticator = described_class.new
+      authenticator.after_create_account(user, result)
 
-        authenticator.after_create_account(user, { extra_data: { weibo_uid: hash[:uid] }})
-
-        expect(PluginStore.get('weibo', key)).to eq({"user_id" => user.id, "raw_info" => 1})
-      end
+      expect(association.user).to eq(user)
+      expect(association.extra["raw_info"]).to eq(
+        auth_hash[:extra][:raw_info].stringify_keys
+      )
     end
 
-    context 'without existing plugin record' do
-      before { PluginStore.remove('weibo', key) }
-      after { PluginStore.remove('weibo', key) }
+    it "creates a missing association" do
+      result = Auth::Result.new
+      result.extra_data = { provider: "weibo", uid: auth_hash[:uid] }
 
-      it 'creates record in plugin store' do
-        authenticator = described_class.new
+      authenticator.after_create_account(user, result)
 
-        authenticator.after_create_account(user, { extra_data: { weibo_uid: hash[:uid] }})
-
-        expect(PluginStore.get('weibo', key)).to eq({"user_id" => user.id})
-      end
+      expect(association.user).to eq(user)
     end
   end
 end
