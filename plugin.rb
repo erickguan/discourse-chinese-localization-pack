@@ -1,6 +1,6 @@
 # name: Discourse 中文本地化服务集合
 # about: 为 Discourse 增加了各种本地化的功能。
-# version: 4.0.0
+# version: 4.1.0
 # authors: Erick Guan
 # url: https://github.com/erickguan/discourse-chinese-localization-pack
 
